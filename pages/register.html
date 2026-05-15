@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrasi - TikTakTuk</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .auth-container { max-width: 500px; margin: 2rem auto; }
+        .role-tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+        .role-tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .role-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    </style>
+</head>
+<body>
+    <header id="dynamicNavbar"></header>
+    <main>
+        <div class="card auth-container">
+            <h2 class="page-title" style="text-align: center; margin-bottom: 1.5rem;">Buat Akun Baru</h2>
+            <div class="role-tabs">
+                <div class="role-tab active" data-role="Customer">Customer</div>
+                <div class="role-tab" data-role="Organizer">Organizer</div>
+                <div class="role-tab" data-role="Admin">Admin</div>
+            </div>
+            <div id="registerError" class="d-none" style="color: var(--danger); margin-bottom: 1rem; text-align: center; font-size: 0.875rem;"></div>
+            <form id="registerForm">
+                <input type="hidden" id="regRole" value="Customer">
+
+                <div class="form-group" id="groupFullName">
+                    <label id="lblFullName" for="regFullName">Nama Lengkap</label>
+                    <input type="text" id="regFullName" class="form-control" required>
+                </div>
+                <div class="form-group" id="groupEmail">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" class="form-control" required>
+                </div>
+                <div class="form-group" id="groupPhone">
+                    <label for="regPhone">Nomor Telepon</label>
+                    <input type="tel" id="regPhone" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regUsername">Username</label>
+                    <input type="text" id="regUsername" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirm">Konfirmasi Password</label>
+                    <input type="password" id="regConfirm" class="form-control" required>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                    <input type="checkbox" id="regTerms" required>
+                    <label for="regTerms" style="margin-bottom: 0; font-weight: normal; font-size: 0.875rem;">Saya setuju dengan syarat & Ketentuan</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Daftar</button>
+            </form>
+            <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+                Sudah punya akun? <a href="login.html" style="color: var(--primary);">Login di sini</a>
+            </p>
+        </div>
+    </main>
+    <script src="../js/app.js"></script>
+    <script src="../js/auth.js"></script>
+</body>
+</html>

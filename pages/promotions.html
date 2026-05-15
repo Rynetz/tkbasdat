@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Promosi - TikTakTuk</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header id="dynamicNavbar"></header>
+
+    <main class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1 class="page-title" style="margin: 0;">Manajemen Promosi</h1>
+            <button id="btnCreatePromo" class="btn btn-primary" style="display: none;">+ Buat Promo</button>
+        </div>
+
+        <div class="features" id="promoStats">
+            <!-- Stats panels injected here -->
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <input type="text" id="searchPromo" class="form-control" placeholder="Cari Kode Promo..." style="flex: 1; min-width: 200px;">
+                <select id="filterType" class="form-control" style="width: auto; min-width: 150px;">
+                    <option value="">Semua Tipe Diskon</option>
+                    <option value="PERCENTAGE">Persentase</option>
+                    <option value="NOMINAL">Nominal</option>
+                </select>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="table" id="promoTable">
+                    <thead>
+                        <tr>
+                            <th>KODE PROMO</th>
+                            <th>TIPE</th>
+                            <th>NILAI DISKON</th>
+                            <th>MULAI</th>
+                            <th>BERAKHIR</th>
+                            <th>PENGGUNAAN</th>
+                            <th id="thAction" style="display: none; text-align: right;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="promoTbody">
+                        <!-- Rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Form Promo -->
+    <div id="promoModal" class="modal-backdrop">
+        <div class="modal">
+            <h2 id="modalTitle" style="margin-bottom: 1.5rem; color: var(--primary);">Buat Promo Baru</h2>
+            <form id="promoForm">
+                <input type="hidden" id="formAction" value="create">
+                <input type="hidden" id="promoId">
+                <div class="form-group">
+                    <label for="pCode">Kode Promo</label>
+                    <input type="text" id="pCode" class="form-control" required placeholder="Contoh: DISKON10">
+                </div>
+                <div class="form-group">
+                    <label for="pType">Tipe Diskon</label>
+                    <select id="pType" class="form-control" required>
+                        <option value="PERCENTAGE">Persentase</option>
+                        <option value="NOMINAL">Nominal</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pValue">Nilai Diskon</label>
+                    <input type="number" id="pValue" class="form-control" required min="1" placeholder="Contoh: 10">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="pStart">Tanggal Mulai</label>
+                        <input type="date" id="pStart" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pEnd">Tanggal Berakhir</label>
+                        <input type="date" id="pEnd" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="pLimit">Batas Penggunaan</label>
+                    <input type="number" id="pLimit" class="form-control" required min="1">
+                </div>
+                
+                <div id="promoError" class="d-none" style="color: var(--danger); margin-bottom: 1rem; font-size: 0.875rem;"></div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('promoModal')" style="flex: 1;">Batal</button>
+                    <button type="submit" id="btnSubmitPromo" class="btn btn-primary" style="flex: 1;">Buat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Delete Promo -->
+    <div id="deletePromoModal" class="modal-backdrop">
+        <div class="modal">
+            <h2 style="margin-bottom: 1rem; color: var(--danger);">Hapus Promo</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Apakah Anda yakin ingin menghapus kode promo ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <input type="hidden" id="delPromoId">
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('deletePromoModal')">Batal</button>
+                <button type="button" class="btn btn-danger" onclick="executeDeletePromo()">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/promotions.js"></script>
+</body>
+</html>

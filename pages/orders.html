@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Order - TikTakTuk</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header id="dynamicNavbar"></header>
+
+    <main class="container">
+        <h1 class="page-title">Daftar Order</h1>
+
+        <div class="features" id="orderStats">
+            <!-- Stats panels injected here -->
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <input type="text" id="searchOrderId" class="form-control" placeholder="Cari Order ID..." style="flex: 1; min-width: 200px;">
+                <select id="filterStatus" class="form-control" style="width: auto; min-width: 150px;">
+                    <option value="">Semua Status</option>
+                    <option value="Lunas">Lunas</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Dibatalkan">Dibatalkan</option>
+                </select>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="table" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>ORDER ID</th>
+                            <th>TANGGAL</th>
+                            <th id="thPelanggan" style="display: none;">PELANGGAN</th>
+                            <th>STATUS</th>
+                            <th>TOTAL</th>
+                            <th id="thAction" style="display: none; text-align: right;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTbody">
+                        <!-- Rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Update Order -->
+    <div id="updateModal" class="modal-backdrop">
+        <div class="modal">
+            <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Update Status Order</h2>
+            <form id="updateForm">
+                <input type="hidden" id="updOrderId">
+                <div class="form-group">
+                    <label>Order ID</label>
+                    <input type="text" id="updOrderDisplay" class="form-control" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="updStatus">Payment Status</label>
+                    <select id="updStatus" class="form-control">
+                        <option value="Pending">Pending</option>
+                        <option value="Lunas">Lunas</option>
+                        <option value="Dibatalkan">Dibatalkan</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('updateModal')" style="flex: 1;">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Delete Order -->
+    <div id="deleteModal" class="modal-backdrop">
+        <div class="modal">
+            <h2 style="margin-bottom: 1rem; color: var(--danger);">Hapus Order</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Apakah Anda yakin ingin menghapus catatan order ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <input type="hidden" id="delOrderId">
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
+                <button type="button" class="btn btn-danger" onclick="executeDeleteOrder()">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/orders.js"></script>
+</body>
+</html>

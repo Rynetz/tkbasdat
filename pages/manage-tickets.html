@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Tiket - TikTakTuk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gray-50 font-sans">
+    
+    <div id="dynamicNavbar"></div>
+
+    <div class="p-8 max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800" id="page-title">Manajemen Tiket</h1>
+                <p class="text-gray-500" id="total-tickets">Total Tiket: 0</p>
+            </div>
+            <button id="btn-add-ticket" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                + Tambah Tiket
+            </button>
+        </div>
+
+        <div class="mb-6 flex flex-col md:flex-row gap-4">
+            <input type="text" id="search-ticket" placeholder="Cari kode tiket atau nama event..." class="w-full md:w-1/2 border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+            
+            <select id="filter-status" class="w-full md:w-1/4 border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="">Semua Status Pembayaran</option>
+                <option value="Lunas">Lunas</option>
+                <option value="Pending">Pending</option>
+                <option value="Dibatalkan">Dibatalkan</option>
+            </select>
+        </div>
+
+        <div id="ticket-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Data tiket akan di-render sebagai card dari JavaScript -->
+        </div>
+    </div>
+
+    <!-- MODAL GENERATE TIKET -->
+    <div id="modal-form" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-[32rem] shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 id="modal-title" class="text-xl font-bold mb-4 text-gray-800">Generate Aset Tiket Baru</h2>
+            <p id="form-error" class="text-red-500 text-sm mb-3 hidden"></p>
+            
+            <form id="ticket-form">
+                <div class="mb-4">
+                    <p class="text-sm font-medium text-blue-600 bg-blue-50 p-3 rounded border border-blue-100">Info: Kode Tiket akan digenerate otomatis oleh sistem.</p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">PILIH PESANAN (ORDER) *</label>
+                    <select id="form-order"
+                        class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <option value="">-- Pilih Pesanan --</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">PILIH KATEGORI *</label>
+                    <select id="form-category"
+                        class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" required disabled>
+                        <option value="">-- Pilih Kategori --</option>
+                    </select>
+                </div>
+                <div class="mb-6" id="seat-selection-group" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ALOKASIKAN KURSI *</label>
+                    <select id="form-seat"
+                        class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">-- Pilih Kursi Tersedia --</option>
+                    </select>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" id="btn-cancel-form"
+                        class="flex-1 border text-gray-700 py-2 rounded-lg hover:bg-gray-50">Batal</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Buat Tiket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL UPDATE TIKET -->
+    <div id="modal-update" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-[32rem] shadow-xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Update Tiket</h2>
+            
+            <form id="update-form">
+                <input type="hidden" id="update-ticket-id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">KODE TIKET</label>
+                    <input type="text" id="update-code" class="w-full border rounded-lg p-2 bg-gray-100 text-gray-600 outline-none" readonly>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">STATUS</label>
+                    <select id="update-status" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <option value="Valid">Valid</option>
+                        <option value="Terpakai">Terpakai</option>
+                        <option value="Dibatalkan">Dibatalkan</option>
+                    </select>
+                </div>
+                <div class="mb-6" id="update-seat-group" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">KURSI</label>
+                    <select id="update-seat" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">Tanpa Kursi</option>
+                    </select>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" id="btn-cancel-update" class="flex-1 border text-gray-700 py-2 rounded-lg hover:bg-gray-50">Batal</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sambungkan ke file JavaScript -->
+    <script src="../js/app.js"></script>
+    <script src="../js/manage-tickets.js"></script>
+</body>
+</html>

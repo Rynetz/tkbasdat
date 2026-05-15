@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kategori Tiket - TikTakTuk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gray-50 font-sans">
+    
+    <!-- Wadah Navbar Dinamis dari app.js -->
+    <div id="dynamicNavbar"></div>
+
+    <div class="p-8 max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Kategori Tiket</h1>
+                <p class="text-gray-500" id="total-categories">Total Kategori: 0</p>
+            </div>
+            <!-- Tombol Tambah: Hanya untuk Admin & Organizer -->
+            <button id="btn-add-category" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                + Tambah Kategori Tiket
+            </button>
+        </div>
+
+        <!-- Tabel Utama -->
+        <div class="bg-white rounded-lg shadow border overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 text-gray-600 text-sm">
+                    <tr>
+                        <th class="p-4 border-b">KATEGORI</th>
+                        <th class="p-4 border-b">ACARA</th>
+                        <th class="p-4 border-b">HARGA</th>
+                        <th class="p-4 border-b">KUOTA</th>
+                        <th class="p-4 border-b text-center" id="th-action" style="display: none;">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody id="category-table-body">
+                    <!-- Data kategori akan di-render dari JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL CREATE & UPDATE -->
+    <div id="modal-form" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-96 shadow-xl">
+            <h2 id="modal-title" class="text-xl font-bold mb-4 text-gray-800">Tambah Kategori Baru</h2>
+            <p id="form-error" class="text-red-500 text-sm mb-3 hidden"></p>
+            
+            <form id="category-form">
+                <input type="hidden" id="form-category-id">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ACARA *</label>
+                    <select id="form-event" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <!-- Opsi acara akan diisi oleh JS -->
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">NAMA KATEGORI *</label>
+                    <input type="text" id="form-name" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="cth. WVIP">
+                </div>
+                
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">HARGA (RP) *</label>
+                        <input type="number" id="form-price" min="0" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">KUOTA *</label>
+                        <input type="number" id="form-quota" min="1" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="100">
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" id="btn-cancel-form" class="flex-1 border text-gray-700 py-2 rounded-lg hover:bg-gray-50">Batal</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DELETE -->
+    <div id="modal-delete" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-96 shadow-xl border-t-4 border-red-500">
+            <h2 class="text-xl font-bold mb-2 text-red-600">Hapus Kategori</h2>
+            <p class="text-gray-600 mb-6">
+                Apakah Anda yakin ingin menghapus kategori <span id="delete-category-name" class="font-bold text-gray-800"></span>? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div class="flex gap-3">
+                <button id="btn-cancel-delete" class="flex-1 border text-gray-700 py-2 rounded-lg hover:bg-gray-50 font-medium">Batal</button>
+                <button id="btn-confirm-delete" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 font-medium">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sambungkan ke file JavaScript -->
+    <script src="../js/app.js"></script>
+    <script src="../js/ticket-categories.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil & Dashboard - TikTakTuk</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .profile-container { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; }
+        @media (max-width: 768px) { .profile-container { grid-template-columns: 1fr; } }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: #f8fafc; padding: 1.5rem; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+        .stat-card h3 { font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem; }
+        .stat-card p { color: var(--text-muted); font-size: 0.875rem; font-weight: 500; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .table th, .table td { border: 1px solid var(--border); padding: 0.75rem; text-align: left; }
+    </style>
+</head>
+<body>
+    <header id="dynamicNavbar"></header>
+    <main>
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="page-title">Dashboard Pengguna</h1>
+            <button id="btnLogoutTop" class="btn btn-danger" onclick="logout()" style="display: none;">Logout</button>
+        </div>
+
+        <div class="stats-grid" id="dashboardStats"></div>
+
+        <div id="extraDashboardContent" style="margin-bottom: 2rem;"></div>
+
+        <div class="profile-container">
+            <div class="card">
+                <h2 style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    Profil Saya
+                    <button id="btnEditMode" class="btn btn-sm btn-secondary">Edit</button>
+                </h2>
+                <div id="profileSuccess" class="d-none" style="color: var(--secondary); margin-bottom: 1rem; font-size: 0.875rem; font-weight: bold;"></div>
+                
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>Role</label>
+                        <input type="text" id="profRole" class="form-control" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="profUsername" class="form-control" disabled>
+                    </div>
+                    <div class="form-group" id="groupProfName">
+                        <label id="lblProfName">Nama Lengkap</label>
+                        <input type="text" id="profFullName" class="form-control" disabled>
+                    </div>
+                    <div class="form-group" id="groupProfEmail">
+                        <label>Email</label>
+                        <input type="email" id="profEmail" class="form-control" disabled>
+                    </div>
+                    <div class="form-group" id="groupProfPhone">
+                        <label>Nomor Telepon</label>
+                        <input type="tel" id="profPhone" class="form-control" disabled>
+                    </div>
+
+                    <button type="submit" id="btnUpdateProfile" class="btn btn-primary d-none" style="width: 100%; margin-bottom: 1rem;">Simpan Perubahan</button>
+                    <button type="button" class="btn btn-secondary" onclick="openModal('passwordModal')" style="width: 100%;">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Form Update Password -->
+    <div id="passwordModal" class="modal-backdrop">
+        <div class="modal">
+            <h2 class="modal-title">Update Password</h2>
+            <div id="pwdSuccess" class="d-none" style="color: var(--secondary); margin-bottom: 1rem; font-size: 0.875rem; font-weight: bold;"></div>
+            <div id="pwdError" class="d-none" style="color: var(--danger); margin-bottom: 1rem; font-size: 0.875rem; font-weight: bold;"></div>
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label>Password Lama</label>
+                    <input type="password" id="oldPassword" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Password Baru</label>
+                    <input type="password" id="newPassword" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Konfirmasi Password Baru</label>
+                    <input type="password" id="confirmNewPassword" class="form-control" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Ubah Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/profile.js"></script>
+</body>
+</html>

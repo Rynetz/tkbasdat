@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Tiket - TikTakTuk</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .checkout-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        @media (max-width: 768px) {
+            .checkout-container { grid-template-columns: 1fr; }
+        }
+        .ticket-cat-card {
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ticket-cat-card:hover { border-color: var(--primary); }
+        .ticket-cat-card.selected {
+            border-color: var(--primary);
+            background-color: #f0f7ff;
+        }
+        .summary-card {
+            position: sticky;
+            top: 2rem;
+            background: #f8f9fa;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        .summary-total {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+        .promo-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header id="dynamicNavbar"></header>
+
+    <main class="container">
+        <h1 class="page-title">Checkout Tiket</h1>
+        
+        <div id="errorMsg" class="d-none" style="color: var(--danger); background: #ffebee; padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem;"></div>
+
+        <div class="checkout-container" id="checkoutContent" style="display: none;">
+            <!-- Kiri: Form -->
+            <div>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h2 id="evName" style="color: var(--primary); margin-bottom: 0.5rem;">Nama Event</h2>
+                    <p id="evDetails" style="color: var(--text-muted);"></p>
+                </div>
+
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h3>Pilih Kategori Tiket</h3>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Pilih satu kategori tiket di bawah ini:</p>
+                    <div id="categoriesList"></div>
+                </div>
+
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label for="ticketQty">Jumlah Tiket (Maks. 10)</label>
+                        <input type="number" id="ticketQty" class="form-control" min="1" max="10" value="1">
+                    </div>
+
+                    <div class="form-group" id="seatSelectionGroup" style="display: none;">
+                        <label for="seatSelect">Pilih Kursi (Opsional)</label>
+                        <select id="seatSelect" class="form-control">
+                            <option value="">-- Pilih Kursi --</option>
+                        </select>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Hanya bisa memilih 1 kursi untuk perwakilan order.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="promoCode">Kode Promo (Opsional)</label>
+                        <div class="promo-group">
+                            <input type="text" id="promoCode" class="form-control" placeholder="Masukkan kode promo">
+                            <button type="button" id="btnApplyPromo" class="btn btn-secondary">Terapkan</button>
+                        </div>
+                        <div id="promoMsg" style="font-size: 0.875rem; margin-top: 0.5rem; font-weight: bold;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kanan: Ringkasan -->
+            <div>
+                <div class="card summary-card">
+                    <h3 style="margin-bottom: 1.5rem;">Ringkasan Pesanan</h3>
+                    
+                    <div class="summary-row">
+                        <span id="sumCatName">Belum ada kategori</span>
+                        <span id="sumCatPrice">Rp 0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Kuantitas</span>
+                        <span id="sumQty">x1</span>
+                    </div>
+                    <div class="summary-row" id="sumDiscountRow" style="display: none; color: var(--danger);">
+                        <span>Diskon Promo</span>
+                        <span id="sumDiscountVal">-Rp 0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Biaya Layanan</span>
+                        <span>Rp 5.000</span>
+                    </div>
+
+                    <div class="summary-row summary-total">
+                        <span>Total Tagihan</span>
+                        <span id="sumTotal">Rp 0</span>
+                    </div>
+
+                    <button id="btnPay" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; font-size: 1.1rem; padding: 1rem;">Bayar Sekarang</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/checkout.js"></script>
+</body>
+</html>
