@@ -1,0 +1,11 @@
+[providers]
+node = {}
+
+[phases.setup]
+nixPkgs = ["nodejs", "npm"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[start]
+cmd = "node backend/server.js"
