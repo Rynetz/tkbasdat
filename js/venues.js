@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentUser = getCurrentUser();
     const userRole = currentUser ? currentUser.role : 'Guest'; 
 
-    let venues = getTable('venues');
+    let venues = [];
     let venueToDelete = null;
 
     // 2. DOM ELEMENTS
@@ -45,21 +45,21 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         let filteredVenues = venues.filter(venue => 
-            venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            venue.venue_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             venue.city.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
         totalText.innerText = `Total Venue: ${filteredVenues.length}`;
 
-        const sortedVenues = [...filteredVenues].sort((a, b) => a.name.localeCompare(b.name));
+        const sortedVenues = [...filteredVenues].sort((a, b) => a.venue_name.localeCompare(b.venue_name));
 
         sortedVenues.forEach(venue => {
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-gray-50 border-b last:border-0';
 
             let rowHTML = `
-                <td class="p-4 text-sm text-gray-500">${venue.id}</td>
-                <td class="p-4 font-medium text-gray-800">${venue.name}</td>
+                <td class="p-4 text-sm text-gray-500">${venue.venue_id}</td>
+                <td class="p-4 font-medium text-gray-800">${venue.venue_name}</td>
                 <td class="p-4 text-gray-600">${venue.capacity.toLocaleString('id-ID')}</td>
                 <td class="p-4 text-gray-600">${venue.city}</td>
             `;
@@ -67,8 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (userRole === 'Admin' || userRole === 'Organizer') {
                 rowHTML += `
                     <td class="p-4 flex justify-center gap-2">
-                        <button class="btn-edit text-blue-500 hover:text-blue-700 font-medium text-sm" data-id="${venue.id}">Edit</button>
-                        <button class="btn-delete text-red-500 hover:text-red-700 font-medium text-sm" data-id="${venue.id}">Hapus</button>
+                        <button class="btn-edit text-blue-500 hover:text-blue-700 font-medium text-sm" data-id="${venue.venue_id}">Edit</button>
+                        <button class="btn-delete text-red-500 hover:text-red-700 font-medium text-sm" data-id="${venue.venue_id}">Hapus</button>
                     </td>
                 `;
             }
@@ -92,10 +92,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function openFormModal(id = null) {
         errorMsg.classList.add('hidden');
         if (id) {
-            const venue = venues.find(v => v.id === id);
+            const venue = venues.find(v => v.venue_id === id);
             formTitle.innerText = 'Edit Venue';
-            inputId.value = venue.id;
-            inputName.value = venue.name;
+            inputId.value = venue.venue_id;
+            inputName.value = venue.venue_name;
             inputCapacity.value = venue.capacity;
             inputAddress.value = venue.address;
             inputCity.value = venue.city;
@@ -113,8 +113,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function closeFormModal() { modalForm.classList.add('hidden'); }
 
     function openDeleteModal(id) {
-        venueToDelete = venues.find(v => v.id === id);
-        deleteNameSpan.innerText = venueToDelete.name;
+        venueToDelete = venues.find(v => v.venue_id === id);
+        deleteNameSpan.innerText = venueToDelete.venue_name;
         modalDelete.classList.remove('hidden');
     }
 
@@ -123,7 +123,23 @@ document.addEventListener("DOMContentLoaded", () => {
         venueToDelete = null;
     }
 
-    // 5. EVENT LISTENERS
+    // 5. FETCH DATA DARI BACKEND
+    async function loadVenues() {
+        try {
+            const response = await fetch('/api/venues');
+            const data = await response.json();
+            if (data.success) {
+                venues = data.data;
+                renderTable(searchInput ? searchInput.value : "");
+            } else {
+                console.error('Gagal mengambil data venue:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching venues:', error);
+        }
+    }
+
+    // 6. EVENT LISTENERS
     if (btnAdd) btnAdd.addEventListener('click', () => openFormModal());
     if (btnCancelForm) btnCancelForm.addEventListener('click', closeFormModal);
     if (btnCancelDelete) btnCancelDelete.addEventListener('click', closeDeleteModal);
@@ -136,51 +152,76 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Form Submit (Create / Update)
     if (formVenue) {
-        formVenue.addEventListener('submit', (e) => {
+        formVenue.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = inputId.value;
-            const name = inputName.value.trim();
+            const venue_name = inputName.value.trim();
             const capacity = parseInt(inputCapacity.value, 10);
             const address = inputAddress.value.trim();
             const city = inputCity.value.trim();
 
-            if (!name || isNaN(capacity) || capacity <= 0 || !address || !city) {
+            if (!venue_name || isNaN(capacity) || capacity <= 0 || !address || !city) {
                 errorMsg.innerText = 'Harap isi semua field dengan benar!';
                 errorMsg.classList.remove('hidden');
                 return;
             }
 
-            if (id) {
-                // Update
-                const index = venues.findIndex(v => v.id === id);
-                venues[index] = { ...venues[index], name, capacity, address, city };
-            } else {
-                // Create
-                const newId = generateUUID(); 
-                venues.push({ id: newId, name, capacity, address, city });
-            }
+            try {
+                let url = '/api/venues';
+                let method = 'POST';
 
-            saveTable('venues', venues);
-            
-            closeFormModal();
-            renderTable(searchInput ? searchInput.value : "");
+                if (id) {
+                    url = `/api/venues/${id}`;
+                    method = 'PUT';
+                }
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ venue_name, capacity, address, city })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeFormModal();
+                    loadVenues(); // Refresh data
+                } else {
+                    errorMsg.innerText = data.message || 'Gagal menyimpan venue';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error saving venue:', error);
+                errorMsg.innerText = 'Terjadi kesalahan pada server.';
+                errorMsg.classList.remove('hidden');
+            }
         });
     }
 
     // Confirm Delete
     if (btnConfirmDelete) {
-        btnConfirmDelete.addEventListener('click', () => {
+        btnConfirmDelete.addEventListener('click', async () => {
             if (venueToDelete) {
-                venues = venues.filter(v => v.id !== venueToDelete.id);
-                
-                saveTable('venues', venues);
+                try {
+                    const response = await fetch(`/api/venues/${venueToDelete.venue_id}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
 
-                closeDeleteModal();
-                renderTable(searchInput ? searchInput.value : "");
+                    if (data.success) {
+                        closeDeleteModal();
+                        loadVenues(); // Refresh data
+                    } else {
+                        alert(data.message || 'Gagal menghapus venue');
+                    }
+                } catch (error) {
+                    console.error('Error deleting venue:', error);
+                    alert('Terjadi kesalahan pada server.');
+                }
             }
         });
     }
 
     // INIT
-    renderTable();
+    loadVenues();
 });

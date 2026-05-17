@@ -2,8 +2,16 @@ document.addEventListener('DOMContentLoaded', () => {
     loadEvents();
 });
 
-function loadEvents() {
-    const events = getTable('events');
+async function loadEvents() {
+    let events = [];
+    try {
+        const response = await fetch('/api/events');
+        const json = await response.json();
+        if (json.success) events = json.data;
+    } catch (err) {
+        console.error(err);
+    }
+
     const container = document.getElementById('eventsContainer');
     let html = '';
 

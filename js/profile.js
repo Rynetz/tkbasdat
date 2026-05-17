@@ -99,9 +99,9 @@ function loadProfileData() {
     
     document.getElementById('profRole').value = user.role;
     document.getElementById('profUsername').value = user.username;
-    document.getElementById('profFullName').value = user.fullName;
-    document.getElementById('profEmail').value = user.email;
-    document.getElementById('profPhone').value = user.phone;
+    document.getElementById('profFullName').value = user.fullName || (user.role === 'Admin' ? 'Administrator System' : '-');
+    document.getElementById('profEmail').value = user.email || '-';
+    document.getElementById('profPhone').value = user.phone || '-';
 
     document.getElementById('profFullName').disabled = true;
     document.getElementById('profEmail').disabled = true;

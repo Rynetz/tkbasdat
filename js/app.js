@@ -114,9 +114,23 @@ function generateUUID() {
 }
 
 function getCurrentUser() {
-    const userId = localStorage.getItem('session_user');
-    if (!userId) return null;
-    return getTable('users').find(u => u.id === userId);
+    const userData = localStorage.getItem('current_user_data');
+    let user = null;
+    
+    if (userData) {
+        user = JSON.parse(userData);
+    } else {
+        const userId = localStorage.getItem('session_user');
+        if (userId) {
+            user = getTable('users').find(u => u.id === userId);
+        }
+    }
+    
+    if (user && user.role === 'Administrator') {
+        user.role = 'Admin';
+    }
+    
+    return user;
 }
 
 function formatCurrency(amount) {
@@ -226,5 +240,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initDB();
     renderNavbar();
 });
-function logout() { localStorage.removeItem('session_user'); window.location.href = getBaseUrl() + 'pages/login.html'; }
+function logout() { localStorage.removeItem('session_user'); localStorage.removeItem('current_user_data'); window.location.href = getBaseUrl() + 'pages/login.html'; }
 //ini logout

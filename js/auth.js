@@ -41,7 +41,7 @@ function handleLogin(e) {
 
     if (user) {
         localStorage.setItem('session_user', user.id);
-        window.location.href = 'profile.html'; 
+        window.location.href = 'profile.html';
     } else {
         errorDiv.innerText = 'Username atau Password salah.';
         errorDiv.classList.remove('d-none');
@@ -78,19 +78,29 @@ function updateRegisterForm(role) {
     }
 }
 
-function handleRegister(e) {
+async function handleRegister(e) {
     e.preventDefault();
-    const errorDiv = document.getElementById('registerError');
-    errorDiv.classList.add('d-none');
 
-    const role = document.getElementById('regRole').value;
-    const username = document.getElementById('regUsername').value.trim();
-    const password = document.getElementById('regPassword').value;
-    const confirm = document.getElementById('regConfirm').value;
+    const regRole = document.getElementById('regRole').value;
+    const regUsername = document.getElementById('regUsername').value.trim();
+    const regPassword = document.getElementById('regPassword').value;
+    const regConfirm = document.getElementById('regConfirm').value;
     const terms = document.getElementById('regTerms').checked;
-    
+    const errorDiv = document.getElementById('registerError');
+
+    if (errorDiv) {
+        errorDiv.classList.add('d-none');
+        errorDiv.innerText = '';
+    }
+
     if (!terms) {
         errorDiv.innerText = 'Anda harus menyetujui Syarat & Ketentuan.';
+        errorDiv.classList.remove('d-none');
+        return;
+    }
+
+    if (regPassword !== regConfirm) {
+        errorDiv.innerText = 'Konfirmasi Password tidak cocok.';
         errorDiv.classList.remove('d-none');
         return;
     }
@@ -99,44 +109,45 @@ function handleRegister(e) {
     let email = '';
     let phone = '';
 
-    if (role !== 'Admin') {
+    if (regRole !== 'Admin') {
         fullName = document.getElementById('regFullName').value.trim();
         email = document.getElementById('regEmail').value.trim();
         phone = document.getElementById('regPhone').value.trim();
     }
 
-    if (password !== confirm) {
-        errorDiv.innerText = 'Konfirmasi Password tidak cocok.';
-        errorDiv.classList.remove('d-none');
-        return;
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                role: regRole,
+                username: regUsername,
+                password: regPassword,
+                full_name: fullName,
+                email: email,
+                phone: phone
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            alert('Registrasi berhasil! Silakan login.');
+            window.location.href = 'login.html';
+
+        } else {
+            if (errorDiv) {
+                errorDiv.innerText = result.message || 'Gagal melakukan registrasi.';
+                errorDiv.classList.remove('d-none');
+            } else {
+                alert(result.message || 'Gagal melakukan registrasi.');
+            }
+        }
+    } catch (error) {
+        console.error('Terjadi kesalahan:', error);
+        if (errorDiv) {
+            errorDiv.innerText = 'Gagal terhubung ke server.';
+            errorDiv.classList.remove('d-none');
+        }
     }
-
-    const users = getTable('users');
-    if (users.find(u => u.username === username)) {
-        errorDiv.innerText = 'Username sudah terdaftar.';
-        errorDiv.classList.remove('d-none');
-        return;
-    }
-    
-    if (role !== 'Admin' && users.find(u => u.email === email && u.email !== '')) {
-        errorDiv.innerText = 'Email sudah terdaftar.';
-        errorDiv.classList.remove('d-none');
-        return;
-    }
-
-    const newUser = {
-        id: generateUUID(),
-        role: role,
-        username: username,
-        password: password,
-        fullName: fullName || '-',
-        email: email || '-',
-        phone: phone || '-'
-    };
-
-    users.push(newUser);
-    saveTable('users', users);
-
-    alert('Registrasi berhasil! Silakan login.');
-    window.location.href = 'login.html';
 }

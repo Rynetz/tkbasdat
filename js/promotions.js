@@ -16,9 +16,17 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPromos();
 });
 
-function renderPromos() {
+async function renderPromos() {
     const user = getCurrentUser();
-    let promos = getTable('promotions');
+    let promos = [];
+    
+    try {
+        const response = await fetch('/api/promotions');
+        const json = await response.json();
+        if (json.success) promos = json.data;
+    } catch (error) {
+        console.error('Failed to fetch promotions:', error);
+    }
 
     const search = document.getElementById('searchPromo').value.toLowerCase();
     const type = document.getElementById('filterType').value;
@@ -26,11 +34,10 @@ function renderPromos() {
     if (search) promos = promos.filter(p => p.promo_code.toLowerCase().includes(search));
     if (type) promos = promos.filter(p => p.discount_type === type);
 
-    const order_promotions = getTable('order_promotions') || [];
-    const getUsedCount = (promoId) => order_promotions.filter(op => op.promotion_id === promoId).length;
+    const getUsedCount = (p) => parseInt(p.used_count) || 0;
 
     const totalPromo = promos.length;
-    const totalUsed = promos.reduce((sum, p) => sum + getUsedCount(p.promotion_id), 0);
+    const totalUsed = promos.reduce((sum, p) => sum + getUsedCount(p), 0);
     const totalPercent = promos.filter(p => p.discount_type === 'PERCENTAGE').length;
 
     document.getElementById('promoStats').innerHTML = `
@@ -51,13 +58,17 @@ function renderPromos() {
             
             let valStr = p.discount_type === 'PERCENTAGE' ? `${p.discount_value}%` : formatCurrency(p.discount_value);
 
+            // Backend returns start_date and end_date as ISO string or date object
+            const startDate = p.start_date.split('T')[0];
+            const endDate = p.end_date.split('T')[0];
+
             html += `<tr>
                 <td style="font-weight: bold;">${p.promo_code}</td>
                 <td>${typeBadge}</td>
                 <td>${valStr}</td>
-                <td>${p.start_date}</td>
-                <td>${p.end_date}</td>
-                <td>${getUsedCount(p.promotion_id)} / ${p.usage_limit}</td>
+                <td>${startDate}</td>
+                <td>${endDate}</td>
+                <td>${getUsedCount(p)} / ${p.usage_limit}</td>
             `;
 
             if (user && user.role === 'Admin') {
@@ -84,26 +95,32 @@ function openCreateModal() {
     document.getElementById('promoModal').classList.add('show');
 }
 
-function openEditModal(id) {
-    const p = getTable('promotions').find(x => x.promotion_id === id);
-    if (!p) return;
+async function openEditModal(id) {
+    try {
+        const response = await fetch('/api/promotions');
+        const json = await response.json();
+        const p = json.data.find(x => x.promotion_id === id);
+        if (!p) return;
 
-    document.getElementById('formAction').value = 'update';
-    document.getElementById('promoId').value = p.promotion_id;
-    document.getElementById('pCode').value = p.promo_code;
-    document.getElementById('pType').value = p.discount_type;
-    document.getElementById('pValue').value = p.discount_value;
-    document.getElementById('pStart').value = p.start_date;
-    document.getElementById('pEnd').value = p.end_date;
-    document.getElementById('pLimit').value = p.usage_limit;
-    
-    document.getElementById('modalTitle').innerText = 'Edit Promo';
-    document.getElementById('btnSubmitPromo').innerText = 'Simpan';
-    document.getElementById('promoError').classList.add('d-none');
-    document.getElementById('promoModal').classList.add('show');
+        document.getElementById('formAction').value = 'update';
+        document.getElementById('promoId').value = p.promotion_id;
+        document.getElementById('pCode').value = p.promo_code;
+        document.getElementById('pType').value = p.discount_type;
+        document.getElementById('pValue').value = p.discount_value;
+        document.getElementById('pStart').value = p.start_date.split('T')[0];
+        document.getElementById('pEnd').value = p.end_date.split('T')[0];
+        document.getElementById('pLimit').value = p.usage_limit;
+        
+        document.getElementById('modalTitle').innerText = 'Edit Promo';
+        document.getElementById('btnSubmitPromo').innerText = 'Simpan';
+        document.getElementById('promoError').classList.add('d-none');
+        document.getElementById('promoModal').classList.add('show');
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-function handlePromoSubmit(e) {
+async function handlePromoSubmit(e) {
     e.preventDefault();
     const action = document.getElementById('formAction').value;
     const id = document.getElementById('promoId').value;
@@ -133,41 +150,44 @@ function handlePromoSubmit(e) {
         return;
     }
 
-    let promos = getTable('promotions');
-    
-    const existing = promos.find(p => p.promo_code.toLowerCase() === code.toLowerCase() && p.promotion_id !== id);
-    if (existing) {
-        err.innerText = 'Kode promo ini sudah digunakan.';
-        err.classList.remove('d-none');
-        return;
-    }
+    const payload = {
+        promo_code: code,
+        discount_type: type,
+        discount_value: value,
+        start_date: start,
+        end_date: end,
+        usage_limit: limit
+    };
 
-    if (action === 'create') {
-        promos.push({
-            promotion_id: generateUUID(),
-            promo_code: code,
-            discount_type: type,
-            discount_value: value,
-            start_date: start,
-            end_date: end,
-            usage_limit: limit
-        });
-    } else {
-        const idx = promos.findIndex(p => p.promotion_id === id);
-        if (idx !== -1) {
-            promos[idx].promo_code = code;
-            promos[idx].discount_type = type;
-            promos[idx].discount_value = value;
-            promos[idx].start_date = start;
-            promos[idx].end_date = end;
-            promos[idx].usage_limit = limit;
+    try {
+        let response;
+        if (action === 'create') {
+            response = await fetch('/api/promotions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            response = await fetch(`/api/promotions/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
         }
-    }
 
-    saveTable('promotions', promos);
-    closeModal('promoModal');
-    renderPromos();
-    alert(action === 'create' ? 'Promo berhasil dibuat!' : 'Promo berhasil diperbarui!');
+        const result = await response.json();
+        if (result.success) {
+            closeModal('promoModal');
+            renderPromos();
+            alert(action === 'create' ? 'Promo berhasil dibuat!' : 'Promo berhasil diperbarui!');
+        } else {
+            err.innerText = result.message || 'Gagal menyimpan promosi.';
+            err.classList.remove('d-none');
+        }
+    } catch (error) {
+        err.innerText = 'Terjadi kesalahan pada server.';
+        err.classList.remove('d-none');
+    }
 }
 
 function openDeleteModal(id) {
@@ -175,13 +195,20 @@ function openDeleteModal(id) {
     document.getElementById('deletePromoModal').classList.add('show');
 }
 
-function executeDeletePromo() {
+async function executeDeletePromo() {
     const id = document.getElementById('delPromoId').value;
-    let promos = getTable('promotions');
-    promos = promos.filter(p => p.promotion_id !== id);
-    saveTable('promotions', promos);
-    closeModal('deletePromoModal');
-    renderPromos();
+    try {
+        const response = await fetch(`/api/promotions/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.success) {
+            closeModal('deletePromoModal');
+            renderPromos();
+        } else {
+            alert(result.message || 'Gagal menghapus promosi.');
+        }
+    } catch (error) {
+        alert('Terjadi kesalahan pada server.');
+    }
 }
 
 function closeModal(id) {

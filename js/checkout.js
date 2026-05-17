@@ -27,77 +27,74 @@ function showError(msg) {
     err.classList.remove('d-none');
 }
 
-function loadEventCheckout(eventId) {
-    const events = getTable('events');
-    currentEvent = events.find(e => e.id === eventId);
-    
-    if (!currentEvent) {
-        showError('Event tidak ditemukan.');
-        return;
-    }
+async function loadEventCheckout(eventId) {
+    try {
+        const evResponse = await fetch('/api/events');
+        const evJson = await evResponse.json();
+        currentEvent = evJson.data.find(e => e.id === eventId);
+        
+        if (!currentEvent) {
+            showError('Event tidak ditemukan.');
+            return;
+        }
 
-    document.getElementById('checkoutContent').style.display = 'grid';
-    
-    const d = new Date(currentEvent.date);
-    document.getElementById('evName').innerText = currentEvent.name;
-    document.getElementById('evDetails').innerHTML = `📍 ${currentEvent.location} &nbsp;|&nbsp; 📅 ${d.toLocaleDateString('id-ID')} ${d.toLocaleTimeString('id-ID')}`;
+        document.getElementById('checkoutContent').style.display = 'grid';
+        
+        const d = new Date(currentEvent.date);
+        document.getElementById('evName').innerText = currentEvent.name;
+        document.getElementById('evDetails').innerHTML = `📍 ${currentEvent.location} &nbsp;|&nbsp; 📅 ${d.toLocaleDateString('id-ID')} ${d.toLocaleTimeString('id-ID')}`;
 
-    const categories = getTable('categories').filter(c => c.eventId === eventId);
-    const catContainer = document.getElementById('categoriesList');
-    
-    if (categories.length === 0) {
-        catContainer.innerHTML = '<p>Tidak ada tiket tersedia.</p>';
-        return;
-    }
+        const catResponse = await fetch(`/api/events/${eventId}/categories`);
+        const catJson = await catResponse.json();
+        const categories = catJson.data || [];
+        
+        const catContainer = document.getElementById('categoriesList');
+        
+        if (categories.length === 0) {
+            catContainer.innerHTML = '<p>Tidak ada tiket tersedia.</p>';
+            return;
+        }
 
-    let catHtml = '';
-    categories.forEach(cat => {
-        const sisa = cat.quota - (cat.booked || 0);
-        catHtml += `
-            <div class="ticket-cat-card" data-id="${cat.id}" data-price="${cat.price}">
-                <div>
-                    <h4 style="margin-bottom: 0.25rem;">${cat.name}</h4>
-                    <span style="font-size: 0.75rem; color: ${sisa > 0 ? 'var(--secondary)' : 'var(--danger)'};">Sisa: ${sisa} tiket</span>
+        let catHtml = '';
+        categories.forEach(cat => {
+            const sisa = cat.quota - (cat.booked || 0);
+            catHtml += `
+                <div class="ticket-cat-card" data-id="${cat.id}" data-price="${cat.price}">
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem;">${cat.name}</h4>
+                        <span style="font-size: 0.75rem; color: ${sisa > 0 ? 'var(--secondary)' : 'var(--danger)'};">Sisa: ${sisa} tiket</span>
+                    </div>
+                    <div style="font-weight: bold; color: var(--primary);">
+                        ${formatCurrency(cat.price)}
+                    </div>
                 </div>
-                <div style="font-weight: bold; color: var(--primary);">
-                    ${formatCurrency(cat.price)}
-                </div>
-            </div>
-        `;
-    });
-    catContainer.innerHTML = catHtml;
-
-    document.querySelectorAll('.ticket-cat-card').forEach(card => {
-        card.addEventListener('click', () => {
-            document.querySelectorAll('.ticket-cat-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            selectedCategory = {
-                id: card.getAttribute('data-id'),
-                name: card.querySelector('h4').innerText,
-                price: parseFloat(card.getAttribute('data-price'))
-            };
-            calculateTotal();
+            `;
         });
-    });
+        catContainer.innerHTML = catHtml;
 
-    if (currentEvent.hasReservedSeating) {
-        document.getElementById('seatSelectionGroup').style.display = 'block';
-        const seats = getTable('seats').filter(s => s.eventId === eventId && s.isAvailable);
-        const seatSelect = document.getElementById('seatSelect');
-        seats.forEach(seat => {
-            const opt = document.createElement('option');
-            opt.value = seat.id;
-            opt.innerText = `Kursi ${seat.number}`;
-            seatSelect.appendChild(opt);
+        document.querySelectorAll('.ticket-cat-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.ticket-cat-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedCategory = {
+                    id: card.getAttribute('data-id'),
+                    name: card.querySelector('h4').innerText,
+                    price: parseFloat(card.getAttribute('data-price'))
+                };
+                calculateTotal();
+            });
         });
+
+
+        document.getElementById('ticketQty').addEventListener('input', calculateTotal);
+        document.getElementById('btnApplyPromo').addEventListener('click', applyPromo);
+        document.getElementById('btnPay').addEventListener('click', processPayment);
+    } catch (err) {
+        showError('Gagal memuat data dari server.');
     }
-
-    document.getElementById('ticketQty').addEventListener('input', calculateTotal);
-    document.getElementById('btnApplyPromo').addEventListener('click', applyPromo);
-    document.getElementById('btnPay').addEventListener('click', processPayment);
 }
 
-function applyPromo() {
+async function applyPromo() {
     const code = document.getElementById('promoCode').value.trim();
     const msg = document.getElementById('promoMsg');
     
@@ -108,31 +105,26 @@ function applyPromo() {
         return;
     }
 
-    const promos = getTable('promotions');
-    const promo = promos.find(p => p.promo_code === code);
+    try {
+        const response = await fetch('/api/promotions');
+        const json = await response.json();
+        const promos = json.data || [];
+        const promo = promos.find(p => p.promo_code === code);
 
-    if (!promo) {
-        msg.style.color = 'var(--danger)';
-        msg.innerText = 'Kode promo tidak valid.';
-        appliedPromo = null;
-    } else {
-        const today = new Date().toISOString().split('T')[0];
-        const order_promotions = getTable('order_promotions') || [];
-        const usedCount = order_promotions.filter(op => op.promotion_id === promo.promotion_id).length;
-        
-        if (today < promo.start_date || today > promo.end_date) {
+        if (!promo) {
             msg.style.color = 'var(--danger)';
-            msg.innerText = 'Promo sudah kadaluarsa atau belum aktif.';
-            appliedPromo = null;
-        } else if (usedCount >= promo.usage_limit) {
-            msg.style.color = 'var(--danger)';
-            msg.innerText = 'Kuota promo sudah habis.';
+            msg.innerText = `Promotion dengan kode ${code} tidak ditemukan.`;
             appliedPromo = null;
         } else {
+            // Hapus validasi frontend agar trigger database yang bekerja saat Checkout!
             msg.style.color = 'var(--secondary)';
-            msg.innerText = `Promo ${promo.discount_type} berhasil diterapkan!`;
+            msg.innerText = `Promo ${promo.discount_type} diterapkan!`;
             appliedPromo = promo;
         }
+    } catch (err) {
+        msg.style.color = 'var(--danger)';
+        msg.innerText = 'Gagal mengecek promo.';
+        appliedPromo = null;
     }
     calculateTotal();
 }
@@ -170,7 +162,7 @@ function calculateTotal() {
     document.getElementById('sumTotal').innerText = formatCurrency(total);
 }
 
-function processPayment() {
+async function processPayment() {
     const errorDiv = document.getElementById('errorMsg');
     errorDiv.classList.add('d-none');
 
@@ -187,45 +179,40 @@ function processPayment() {
         return;
     }
 
-    let subtotal = selectedCategory.price * qty;
-    let discount = 0;
-    if (appliedPromo) {
-        if (appliedPromo.discount_type === 'PERCENTAGE') {
-            discount = subtotal * (appliedPromo.discount_value / 100);
-        } else {
-            discount = appliedPromo.discount_value;
-        }
-        if (discount > subtotal) discount = subtotal;
-    }
-    const serviceFee = 5000;
-    const finalAmount = subtotal - discount + serviceFee;
-
     const user = getCurrentUser();
     
-    const newOrder = {
-        order_id: generateUUID(),
-        order_date: new Date().toISOString(),
-        payment_status: 'Pending',
-        total_amount: finalAmount,
-        customer_id: user.id,
-        event_id: currentEvent.id,
-        customerName: user.fullName || user.username
+    const payload = {
+        category_id: selectedCategory.id,
+        qty: qty,
+        promo_code: appliedPromo ? appliedPromo.promo_code : null,
+        userId: user.id
     };
 
-    const orders = getTable('orders');
-    orders.push(newOrder);
-    saveTable('orders', orders);
-    
-    if (appliedPromo) {
-        const op = getTable('order_promotions') || [];
-        op.push({
-            order_promotion_id: generateUUID(),
-            promotion_id: appliedPromo.promotion_id,
-            order_id: newOrder.order_id
-        });
-        saveTable('order_promotions', op);
-    }
+    try {
+        document.getElementById('btnPay').disabled = true;
+        document.getElementById('btnPay').innerText = 'Memproses...';
 
-    alert('Pemesanan berhasil dibuat! Silakan lunasi pembayaran.');
-    window.location.href = 'orders.html';
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Pemesanan berhasil dibuat! Silakan lunasi pembayaran.');
+            window.location.href = 'orders.html';
+        } else {
+            errorDiv.innerText = result.message || 'Gagal memproses pembayaran.';
+            errorDiv.classList.remove('d-none');
+            document.getElementById('btnPay').disabled = false;
+            document.getElementById('btnPay').innerText = 'Bayar Sekarang';
+        }
+    } catch (err) {
+        errorDiv.innerText = 'Terjadi kesalahan pada server saat memproses pesanan.';
+        errorDiv.classList.remove('d-none');
+        document.getElementById('btnPay').disabled = false;
+        document.getElementById('btnPay').innerText = 'Bayar Sekarang';
+    }
 }
