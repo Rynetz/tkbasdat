@@ -2,7 +2,7 @@
   "name": "tkbasdat-backend",
   "version": "1.0.0",
   "scripts": {
-    "start": "node server.js"
+    "start": "bash ../start.sh"
   },
   "dependencies": {
     "cors": "^2.8.6",

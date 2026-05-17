@@ -7,4 +7,4 @@ nixPkgs = ["nodejs"]
 cmds = ["npm install"]
 
 [start]
-cmd = "node backend/server.js"
+cmd = "bash start.sh"
