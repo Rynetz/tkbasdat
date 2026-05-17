@@ -11,6 +11,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Add a health check endpoint for Railway
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 app.use(express.static(path.join(__dirname, '../')));
 
 // ✅ ROUTE UNTUK MANAJEMEN VENUE (TK04)
@@ -373,6 +379,9 @@ app.delete('/api/promotions/:id', async (req, res) => {
     }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on http://0.0.0.0:${PORT}`);
+const portNumber = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+console.log('Starting server. PORT env is:', process.env.PORT);
+
+app.listen(portNumber, '0.0.0.0', () => {
+    console.log(`Server is successfully running and listening on http://0.0.0.0:${portNumber}`);
 });
