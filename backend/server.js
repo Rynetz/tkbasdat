@@ -382,6 +382,6 @@ app.delete('/api/promotions/:id', async (req, res) => {
 const portNumber = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 console.log('Starting server. PORT env is:', process.env.PORT);
 
-app.listen(portNumber, '0.0.0.0', () => {
-    console.log(`Server is successfully running and listening on http://0.0.0.0:${portNumber}`);
+app.listen(portNumber, () => {
+    console.log(`Server is successfully running and listening on port ${portNumber}`);
 });
