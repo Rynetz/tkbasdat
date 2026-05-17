@@ -1,0 +1,15 @@
+{
+  "name": "tkbasdat",
+  "version": "1.0.0",
+  "description": "TK Basdat Deployment",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
+  }
+}
