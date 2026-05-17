@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     const loginUsername = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
@@ -36,14 +36,30 @@ function handleLogin(e) {
         return;
     }
 
-    const users = getTable('users');
-    const user = users.find(u => u.username === loginUsername && u.password === password);
-
-    if (user) {
-        localStorage.setItem('session_user', user.id);
-        window.location.href = 'profile.html';
-    } else {
-        errorDiv.innerText = 'Username atau Password salah.';
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: loginUsername, password: password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            localStorage.setItem('session_user', result.user.id);
+            localStorage.setItem('current_user_data', JSON.stringify({
+                id: result.user.id,
+                username: result.user.username,
+                role: result.user.role
+            }));
+            window.location.href = 'profile.html';
+        } else {
+            errorDiv.innerText = result.message || 'Username atau Password salah.';
+            errorDiv.classList.remove('d-none');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        errorDiv.innerText = 'Gagal terhubung ke server.';
         errorDiv.classList.remove('d-none');
     }
 }
